@@ -973,16 +973,16 @@ static int send_tx_ack(uint8_t token_h, uint8_t token_l, enum jit_error_e error)
 /* -------------------------------------------------------------------------- */
 /* --- MAIN FUNCTION -------------------------------------------------------- */
 
-int main(void)
+int main(int argc, char *argv[])
 {
     struct sigaction sigact; /* SIGQUIT&SIGINT&SIGTERM signal handling */
     int i; /* loop variable and temporary variable for return value */
     int x;
+    int opt;
 
     /* configuration file related */
-    char *global_cfg_path= "global_conf.json"; /* contain global (typ. network-wide) configuration */
-    char *local_cfg_path = "local_conf.json"; /* contain node specific configuration, overwrite global parameters for parameters that are defined in both */
-    char *debug_cfg_path = "debug_conf.json"; /* if present, all other configuration files are ignored */
+    char global_cfg_path[256]= "/etc/lora/global_conf.json"; /* contain global (typ. network-wide) configuration */
+    char local_cfg_path[256] = "local_conf.json"; /* contain node specific configuration, overwrite global parameters for parameters that are defined in both */
 
     /* threads */
     pthread_t thrid_up;
@@ -1041,6 +1041,17 @@ int main(void)
     float up_ack_ratio;
     float dw_ack_ratio;
 
+    while ((opt = getopt(argc, argv, "c:")) != -1) {
+        switch (opt) {
+        case 'c':
+            strncpy(local_cfg_path, optarg, 254);
+            break;
+        default:
+            fprintf(stderr, "Usage: %s [-c config_path]\n", argv[0]);
+            exit(EXIT_FAILURE);
+        }
+    }
+
     /* display version informations */
     MSG("*** Beacon Packet Forwarder for Lora Gateway ***\nVersion: " VERSION_STRING "\n");
     MSG("*** Lora concentrator HAL library version info ***\n%s\n***\n", lgw_version_info());
@@ -1055,18 +1066,7 @@ int main(void)
     #endif
 
     /* load configuration files */
-    if (access(debug_cfg_path, R_OK) == 0) { /* if there is a debug conf, parse only the debug conf */
-        MSG("INFO: found debug configuration file %s, parsing it\n", debug_cfg_path);
-        MSG("INFO: other configuration files will be ignored\n");
-        x = parse_SX1301_configuration(debug_cfg_path);
-        if (x != 0) {
-            exit(EXIT_FAILURE);
-        }
-        x = parse_gateway_configuration(debug_cfg_path);
-        if (x != 0) {
-            exit(EXIT_FAILURE);
-        }
-    } else if (access(global_cfg_path, R_OK) == 0) { /* if there is a global conf, parse it and then try to parse local conf  */
+    if (access(global_cfg_path, R_OK) == 0) { /* if there is a global conf, parse it and then try to parse local conf  */
         MSG("INFO: found global configuration file %s, parsing it\n", global_cfg_path);
         x = parse_SX1301_configuration(global_cfg_path);
         if (x != 0) {
@@ -1093,7 +1093,7 @@ int main(void)
             exit(EXIT_FAILURE);
         }
     } else {
-        MSG("ERROR: [main] failed to find any configuration file named %s, %s OR %s\n", global_cfg_path, local_cfg_path, debug_cfg_path);
+        MSG("ERROR: [main] failed to find any configuration file named %s or %s\n", global_cfg_path, local_cfg_path);
         exit(EXIT_FAILURE);
     }
 
