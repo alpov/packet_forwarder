@@ -983,6 +983,7 @@ int main(int argc, char *argv[])
     /* configuration file related */
     char global_cfg_path[256]= "/etc/lora/global_conf.json"; /* contain global (typ. network-wide) configuration */
     char local_cfg_path[256] = "local_conf.json"; /* contain node specific configuration, overwrite global parameters for parameters that are defined in both */
+    char spi_path[256] = "/dev/spi0";
 
     /* threads */
     pthread_t thrid_up;
@@ -1041,10 +1042,13 @@ int main(int argc, char *argv[])
     float up_ack_ratio;
     float dw_ack_ratio;
 
-    while ((opt = getopt(argc, argv, "c:")) != -1) {
+    while ((opt = getopt(argc, argv, "c:s:")) != -1) {
         switch (opt) {
         case 'c':
             strncpy(local_cfg_path, optarg, 254);
+            break;
+        case 's':
+            strncpy(spi_path, optarg, 254);
             break;
         default:
             fprintf(stderr, "Usage: %s [-c config_path]\n", argv[0]);
@@ -1190,8 +1194,9 @@ int main(int argc, char *argv[])
     }
     freeaddrinfo(result);
 
+    MSG("Using SPI device %s\n", spi_path);
     /* starting the concentrator */
-    i = lgw_start();
+    i = lgw_start(spi_path);
     if (i == LGW_HAL_SUCCESS) {
         MSG("INFO: [main] concentrator started, packet can now be received\n");
     } else {
