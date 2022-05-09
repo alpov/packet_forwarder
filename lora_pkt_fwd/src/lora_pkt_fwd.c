@@ -319,6 +319,18 @@ static int parse_SX1301_configuration(const char * conf_file) {
         MSG("WARNING: Data type for clksrc seems wrong, please check\n");
         boardconf.clksrc = 0;
     }
+    val = json_object_get_value(conf_obj, "modem_invert_iq"); /* fetch value (if possible) */
+    if (json_value_get_type(val) == JSONBoolean) {
+        boardconf.modem_invert_iq = (bool)json_value_get_boolean(val);
+    } else {
+        boardconf.modem_invert_iq = true;
+    }
+    val = json_object_get_value(conf_obj, "only_crc_en"); /* fetch value (if possible) */
+    if (json_value_get_type(val) == JSONBoolean) {
+        boardconf.only_crc_en = (bool)json_value_get_boolean(val);
+    } else {
+        boardconf.only_crc_en = true;
+    }
     MSG("INFO: lorawan_public %d, clksrc %d\n", boardconf.lorawan_public, boardconf.clksrc);
     /* all parameters parsed, submitting configuration to the HAL */
     if (lgw_board_setconf(boardconf) != LGW_HAL_SUCCESS) {

@@ -2,6 +2,8 @@
     "SX1301_conf": {
         "lorawan_public": true,
         "clksrc": 1, /* radio_1 provides clock to concentrator */
+        "modem_invert_iq": true,
+        "only_crc_en": true,
         "lbt_cfg": {
             "enable": false,
             "rssi_target": -80, /* dBm */
