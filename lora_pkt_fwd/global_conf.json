@@ -87,7 +87,11 @@
             "radio": 1,
             "if": -200000,
             "bandwidth": 250000,
-            "spread_factor": 7
+            "spread_factor": 7,
+            "implicit_header": false,
+            "implicit_crc_en": false,
+            "implicit_coding_rate": 1,
+            "implicit_payload_length": 17
         },
         "chan_FSK": {
             /* FSK 50kbps channel, 868.8 MHz */
