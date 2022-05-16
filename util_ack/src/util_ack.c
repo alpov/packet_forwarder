@@ -77,6 +77,7 @@ int main(int argc, char **argv)
     socklen_t addr_len = sizeof dist_addr;
     uint8_t databuf[4096];
     int byte_nb;
+    char *json;
 
     /* variables for protocol management */
     uint32_t raw_mac_h; /* Most Significant Nibble, network order */
@@ -133,6 +134,7 @@ int main(int argc, char **argv)
 
     while (1) {
         /* wait to receive a packet */
+        memset(databuf, 0, sizeof(databuf));
         byte_nb = recvfrom(sock, databuf, sizeof databuf, 0, (struct sockaddr *)&dist_addr, &addr_len);
         if (byte_nb == -1) {
             MSG("ERROR: recvfrom returned %s \n", strerror(errno));
@@ -145,36 +147,40 @@ int main(int argc, char **argv)
             MSG("ERROR: getnameinfo returned %s \n", gai_strerror(i));
             exit(EXIT_FAILURE);
         }
-        printf(" -> pkt in , host %s (port %s), %i bytes", host_name, port_name, byte_nb);
+//        printf(" -> pkt in , host %s (port %s), %i bytes", host_name, port_name, byte_nb);
 
         /* check and parse the payload */
         if (byte_nb < 12) { /* not enough bytes for packet from gateway */
-            printf(" (too short for GW <-> MAC protocol)\n");
+//            printf(" (too short for GW <-> MAC protocol)\n");
             continue;
         }
         /* don't touch the token in position 1-2, it will be sent back "as is" for acknowledgement */
         if (databuf[0] != PROTOCOL_VERSION) { /* check protocol version number */
-            printf(", invalid version %u\n", databuf[0]);
+//            printf(", invalid version %u\n", databuf[0]);
             continue;
         }
         raw_mac_h = *((uint32_t *)(databuf+4));
         raw_mac_l = *((uint32_t *)(databuf+8));
         gw_mac = ((uint64_t)ntohl(raw_mac_h) << 32) + (uint64_t)ntohl(raw_mac_l);
+        json = (char *)(databuf+12);
 
         /* interpret gateway command */
         switch (databuf[3]) {
             case PKT_PUSH_DATA:
-                printf(", PUSH_DATA from gateway 0x%08X%08X\n", (uint32_t)(gw_mac >> 32), (uint32_t)(gw_mac & 0xFFFFFFFF));
+//                printf(", PUSH_DATA from gateway 0x%08X%08X\n", (uint32_t)(gw_mac >> 32), (uint32_t)(gw_mac & 0xFFFFFFFF));
                 ack_command = PKT_PUSH_ACK;
-                printf("<-  pkt out, PUSH_ACK for host %s (port %s)", host_name, port_name);
+//                printf("<-  pkt out, PUSH_ACK for host %s (port %s)", host_name, port_name);
+                if (strstr(json, "rxpk") != NULL) {
+                    printf("0x%08X%08X: %s\n", (uint32_t)(gw_mac >> 32), (uint32_t)(gw_mac & 0xFFFFFFFF), json);
+                }
                 break;
             case PKT_PULL_DATA:
-                printf(", PULL_DATA from gateway 0x%08X%08X\n", (uint32_t)(gw_mac >> 32), (uint32_t)(gw_mac & 0xFFFFFFFF));
+//                printf(", PULL_DATA from gateway 0x%08X%08X\n", (uint32_t)(gw_mac >> 32), (uint32_t)(gw_mac & 0xFFFFFFFF));
                 ack_command = PKT_PULL_ACK;
-                printf("<-  pkt out, PULL_ACK for host %s (port %s)", host_name, port_name);
+//                printf("<-  pkt out, PULL_ACK for host %s (port %s)", host_name, port_name);
                 break;
             default:
-                printf(", unexpected command %u\n", databuf[3]);
+//                printf(", unexpected command %u\n", databuf[3]);
                 continue;
         }
 
@@ -185,9 +191,9 @@ int main(int argc, char **argv)
         databuf[3] = ack_command;
         byte_nb = sendto(sock, (void *)databuf, 4, 0, (struct sockaddr *)&dist_addr, addr_len);
         if (byte_nb == -1) {
-            printf(", send error:%s\n", strerror(errno));
+//            printf(", send error:%s\n", strerror(errno));
         } else {
-            printf(", %i bytes sent\n", byte_nb);
+//            printf(", %i bytes sent\n", byte_nb);
         }
     }
 }
