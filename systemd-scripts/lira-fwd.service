@@ -1,0 +1,12 @@
+[Unit]
+Description=LoRaWAN sniffer (packet logger)
+After=lira-boot.service
+Requires=lira-boot.service
+
+[Service]
+Restart=always
+ExecStart=/opt/lira/packet_forwarder/util_ack/util_ack 1680
+StandardOutput=append:/opt/lira/data/log.txt
+
+[Install]
+WantedBy=multi-user.target

@@ -1,0 +1,13 @@
+[Unit]
+Description=LoRaWAN sniffer (boot)
+After=network.target
+
+[Service]
+#Type=idle
+ExecStart=/bin/bash /opt/lira/lora_gateway/reset_lgw.sh start 17
+ExecStart=/bin/bash /opt/lira/ttybus/fake_gps.sh
+Type=oneshot
+RemainAfterExit=yes
+
+[Install]
+WantedBy=multi-user.target

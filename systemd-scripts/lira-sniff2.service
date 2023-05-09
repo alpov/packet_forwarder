@@ -1,0 +1,12 @@
+[Unit]
+Description=LoRaWAN sniffer (down)
+After=lira-fwd.service
+
+[Service]
+Restart=always
+ExecStartPre=/bin/sleep 10
+ExecStart=/opt/lira/packet_forwarder/lora_pkt_fwd/lora_pkt_fwd -c /opt/lira/packet_forwarder/lora_pkt_fwd/conf_sniff2_down.json -s /dev/spidev0.1
+StandardOutput=append:/tmp/log2_down.txt
+
+[Install]
+WantedBy=multi-user.target
